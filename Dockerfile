@@ -1,6 +1,6 @@
 # Postgresql (http://www.postgresql.org/)
 
-FROM phusion/baseimage:0.9.15
+FROM phusion/baseimage:0.9.16
 MAINTAINER Ryan Seto <ryanseto@yak.net>
 
 # Ensure we create the cluster with UTF-8 locale
@@ -16,7 +16,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --force-yes postgresql-9.3
 RUN /etc/init.d/postgresql stop
 
 # Install other tools.
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y pwgen inotify-tools
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y inotify-tools
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -35,6 +35,11 @@ RUN touch /firstrun
 # Add daemon to be run by runit.
 RUN mkdir /etc/service/postgresql
 RUN ln -s /scripts/start.sh /etc/service/postgresql/run
+
+
+# Correct the Error: could not open temporary statistics file "/var/run/postgresql/9.3-main.pg_stat_tmp/global.tmp": No such file or directory
+RUN mkdir -p /var/run/postgresql/9.3-main.pg_stat_tmp
+RUN chown postgres: /var/run/postgresql/9.3-main.pg_stat_tmp -R
 
 # Expose our data, log, and configuration directories.
 VOLUME ["/data", "/var/log/postgresql", "/etc/postgresql"]
