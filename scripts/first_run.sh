@@ -23,24 +23,21 @@ pre_start_action() {
 }
 
 post_start_action() {
-  echo "Creating the superuser: $DBUSER"
-  setuser postgres psql -q <<-EOF
-    DROP ROLE IF EXISTS $DBUSER;
-    CREATE ROLE $DBUSER WITH ENCRYPTED PASSWORD '$DBPASS';
-    ALTER USER $DBUSER WITH ENCRYPTED PASSWORD '$DBPASS';
-    ALTER ROLE $DBUSER WITH SUPERUSER;
-    ALTER ROLE $DBUSER WITH LOGIN;
+  DB_EXISTS=`setuser postgres psql -l | grep $DB | wc -l`
+  if [ $DB_EXISTS -eq 0 ]; then
+    echo "Creating the superuser: $DBUSER"
+setuser postgres psql -q <<-EOF
+CREATE ROLE $DBUSER WITH ENCRYPTED PASSWORD '$DBPASS';
+ALTER USER $DBUSER WITH ENCRYPTED PASSWORD '$DBPASS';
+ALTER ROLE $DBUSER WITH SUPERUSER;
+ALTER ROLE $DBUSER WITH LOGIN;
 EOF
 
-  # create database if requested
-  if [ ! -z "$DB" ]; then
-    for db in $DB; do
-      echo "Creating database: $DB"
-      setuser postgres psql -q <<-EOF
-      CREATE DATABASE $DB WITH OWNER=$DBUSER ENCODING='UTF8';
-      GRANT ALL ON DATABASE $DB TO $DBUSER
+        echo "Creating database: $DB"
+setuser postgres psql -q <<-EOF
+CREATE DATABASE $DB WITH OWNER=$DBUSER ENCODING='UTF8';
+GRANT ALL ON DATABASE $DB TO $DBUSER;
 EOF
-    done
   fi
 
   if [[ ! -z "$EXTENSIONS" && ! -z "$DB" ]]; then
@@ -48,8 +45,8 @@ EOF
       for db in $DB; do
         echo "Installing extension for $DB: $extension"
         # enable the extension for the user's database
-        setuser postgres psql $DB <<-EOF
-        CREATE EXTENSION "$extension";
+setuser postgres psql $DB <<-EOF
+CREATE EXTENSION "$extension";
 EOF
       done
     done
