@@ -44,5 +44,9 @@ RUN chown postgres: /var/run/postgresql/9.3-main.pg_stat_tmp -R
 # Expose our data, log, and configuration directories.
 VOLUME ["/data", "/var/log/postgresql", "/etc/postgresql"]
 
+# Make postgres user owner of log and data directories
+RUN chown postgres: /var/log/postgresql -R
+RUN chown postgres: /data -R
+
 # Use baseimage-docker's init system.
 CMD ["/sbin/my_init"]
